@@ -1,0 +1,5 @@
+node_modules
+services/verseDependencies/db/gnews.bin
+.env
+
+dist
