@@ -28,6 +28,7 @@
     "path": "^0.12.7",
     "sqlite3": "^4.1.0",
     "underscore": "^1.9.1",
+    "unorm": "^1.6.0",
     "wink-lemmatizer": "^3.0.1",
     "word2vec": "^1.1.4"
   },

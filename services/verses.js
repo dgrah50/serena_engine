@@ -270,7 +270,8 @@ export const verseSearch = async function(userID, query, addToDB) {
     );
     return {
       keyword: "osis",
-      verses: verse
+      verses: verse,
+      sermons: fetchSermon("faith")
     };
   } else {
     //this path is take if the query is a general prayer

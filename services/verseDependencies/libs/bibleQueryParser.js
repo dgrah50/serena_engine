@@ -2,12 +2,14 @@
 // let bcvParser = require("../../../node_modules/bible-passage-reference-parser/js/en_bcv_parser").bcv_parser;
 var bcv_parser = require("bible-passage-reference-parser/js/en_bcv_parser")
   .bcv_parser;
-var bcv = new bcv_parser();
+var bcv = new bcv_parser()
+var unorm = require("unorm");
+
 
 // The only exported function. It normalizes the string and returns an object with a recommended course of action.
 function parse(q) {
 	// The BCV parser expects normalized UTF-8. If your environment doesn't support `String.normalize`, try https://github.com/walling/unorm . Alternately, if you're only interested in ASCII text, you could probably delete this line.
-	q = q.normalize("NFC")
+	q =  unorm.nfc(q)
 	const response = {
 		q,
 		counts: {
