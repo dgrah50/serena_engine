@@ -6,9 +6,9 @@ const {
 const { getOrMakeGroup } = require("./groups")
 
 //  Verse API
-const getVerse = async (userID,content) => {
+const getVerse = async (userID,content,log) => {
   try {
-    return await verseSearch(userID,content,true);
+    return await verseSearch(userID,content,log);
   } catch (e) {
     throw new Error(e.message);
   }

@@ -6,9 +6,9 @@ const { getVerse, generateToken, enrichUser, getVerseRecs, createGroup } = servi
  * call other imported services, or same service but different functions here if you need to
  */
 const postSearch = async (req, res, next) => {
-  const { userID, content } = req.body;
+  const { userID, content, log = true} = req.body;
   try {
-    res.send(await getVerse(userID,content));
+    res.send(await getVerse(userID,content,log));
     next();
   } catch (e) {
     console.log(e.message);

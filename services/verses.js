@@ -149,7 +149,7 @@ const osisToVerse = async function(bibleVersion, osisCodes, db) {
     });
   }
   return new Promise((res, rej) => {
-    setTimeout(() => res(_.sample(verseList, 3)), 200);
+    setTimeout(() => res(verseList), 200);
   });
 };
 //Given an Bible verse reference in English this function returns the osis
@@ -271,7 +271,8 @@ export const verseSearch = async function(userID, query, addToDB) {
     return {
       keyword: "osis",
       verses: verse,
-      sermons: fetchSermon("faith")
+      sermons: fetchSermon("faith"),
+      nexttopics: null
     };
   } else {
     //this path is take if the query is a general prayer
@@ -298,10 +299,16 @@ export const verseSearch = async function(userID, query, addToDB) {
                 console.log(err);
               }
             }
+            let bestTopic = model
+              .getNearestWords(model.getVector(topic), 40)
+              .filter(nearestWord => {
+                return knowntopics.includes(nearestWord.word);
+              });
             return {
               keyword: topic,
               verses: await topicToVerse("t_kjv", topic, db),
-              sermons: fetchSermon(topic)
+              sermons: fetchSermon(topic),
+              nexttopics: bestTopic
             };
           }
         }
@@ -311,7 +318,7 @@ export const verseSearch = async function(userID, query, addToDB) {
           .filter(nearestWord => {
             return knowntopics.includes(nearestWord.word);
           })
-          .map(nearestWord => nearestWord.word)[0];
+          .map(nearestWord => nearestWord.word);
         if (addToDB) {
           let db = admin
             .firestore()
@@ -322,7 +329,7 @@ export const verseSearch = async function(userID, query, addToDB) {
           try {
             await db.set(
               {
-                history: admin.firestore.FieldValue.arrayUnion(bestTopic)
+                history: admin.firestore.FieldValue.arrayUnion(bestTopic[0])
               },
               { merge: true }
             );
@@ -331,9 +338,10 @@ export const verseSearch = async function(userID, query, addToDB) {
           }
         }
         return {
-          keyword: bestTopic,
-          verses: await topicToVerse("t_kjv", bestTopic, db),
-          sermons: fetchSermon(bestTopic)
+          keyword: bestTopic[0],
+          verses: await topicToVerse("t_kjv", bestTopic[0], db),
+          sermons: fetchSermon(bestTopic[0]),
+          nexttopics: bestTopic
         };
       }
     } catch (error) {
