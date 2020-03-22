@@ -260,9 +260,13 @@ export const init = function() {
 
 // Main function to search and obtain result to be returned over API
 export const verseSearch = async function(userID, query, addToDB) {
+
+
+  // This line decides if the query is a specific verse or just a general sentence
   let queryParsed = parseQuery(query);
+
+//this path is taken if the query is assumed to be asking for a specific verse
   if (queryParsed.recommend == "osis") {
-    //this path is taken if the query is assumed to be asking for a specific verse
     let verse = await osisToVerse(
       "t_kjv",
       [engToOsis(queryParsed.components[0].osis)],
@@ -274,8 +278,10 @@ export const verseSearch = async function(userID, query, addToDB) {
       sermons: fetchSermon("faith"),
       nexttopics: null
     };
-  } else {
-    //this path is take if the query is a general prayer
+  }
+
+  //this path is take if the query is a general sentence
+  else {
     let extractedKeywords = keywords(query);
     try {
       if (extractedKeywords != null) {
@@ -299,6 +305,7 @@ export const verseSearch = async function(userID, query, addToDB) {
                 console.log(err);
               }
             }
+            // find the nearest topic that does exist
             let bestTopic = model
               .getNearestWords(model.getVector(topic), 40)
               .filter(nearestWord => {
@@ -313,48 +320,15 @@ export const verseSearch = async function(userID, query, addToDB) {
           }
         }
       } else {
-        let bestTopic = model
-          .getNearestWords(model.getVector(extractedKeywords[0]), 40)
-          .filter(nearestWord => {
-            return knowntopics.includes(nearestWord.word);
-          })
-          .map(nearestWord => nearestWord.word);
-        if (addToDB) {
-          let db = admin
-            .firestore()
-            .collection("users")
-            .doc("" + userID)
-            .collection("Info")
-            .doc("history");
-          try {
-            await db.set(
-              {
-                history: admin.firestore.FieldValue.arrayUnion(bestTopic[0])
-              },
-              { merge: true }
-            );
-          } catch (err) {
-            console.log(err);
-          }
-        }
-        return {
-          keyword: bestTopic[0],
-          verses: await topicToVerse("t_kjv", bestTopic[0], db),
-          sermons: fetchSermon(bestTopic[0]),
-          nexttopics: bestTopic
-        };
+        return verseSearch(userID, "faith", false);
       }
     } catch (error) {
       return verseSearch(userID, "faith", false);
     }
-
-    return verseSearch(userID, "faith", false);
   }
 };
 
-//NEED TO LOG SEARCH VECTORS
 
-//TO BE IMPLEMENTED
 export const getRecommendedSermons = async function(userID) {
   userID = "" + userID;
   let db = admin
@@ -367,11 +341,12 @@ export const getRecommendedSermons = async function(userID) {
     .get()
     .then(res => {
       return res.data();
-    })
+    }) 
     .then(history => {
       return calculateMeanVec(userID, history);
     });
 };
+
 
 const calculateMeanVec = function(userID, history) {
   if (history) {
@@ -380,7 +355,6 @@ const calculateMeanVec = function(userID, history) {
     let meanword = history
       .map(word => {
         let interm = model.getVector(word);
-
         if (interm) {
           return Array.from(interm.values);
         } else {
